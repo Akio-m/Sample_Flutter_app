@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'dart:ui' as ui;
 
+import 'package:flutter/services.dart';
+import 'package:flutter/rendering.dart';
+import 'dart:typed_data';
+import 'dart:async';
+
 
 void main() {
   runApp(new MyApp());
@@ -52,11 +57,27 @@ class MyRenderBoxWidget extends SingleChildRenderObjectWidget {
 }
 
 class _MyRenderBox extends RenderBox {
+  ui.Image _img;
 
   @override
   bool hitTest(HitTestResult result, { @required Offset position }) {
     return true;
   }
+
+  _MyRenderBox(){
+    loadAssetImage('automata.png');
+  }
+
+  loadAssetImage(String fname) => rootBundle.load("assets/$fname").then((bd) {
+    Uint8List u8lst = Uint8List.view(bd.buffer);
+    ui.instantiateImageCodec(u8lst).then((codec){
+      codec.getNextFrame().then((frameInfo) {
+        _img = frameInfo.image;
+        markNeedsPaint();
+        print ("_img created: $_img");
+      });
+    });
+  });
 
   @override
   void paint(PaintingContext context, Offset offset) {
@@ -104,6 +125,13 @@ class _MyRenderBox extends RenderBox {
 
     Offset off = Offset(dx+50.0, dy+50.0);
     c.drawParagraph(paragraph, off);
+
+    if (_img != null) {
+      c.drawImage(_img, off, p);
+      print('draw _img');
+    } else {
+      print('_img is null.');
+    }
   }
 
 }
