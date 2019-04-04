@@ -64,74 +64,22 @@ class _MyRenderBox extends RenderBox {
     return true;
   }
 
-  _MyRenderBox(){
-    loadAssetImage('automata.png');
-  }
-
-  loadAssetImage(String fname) => rootBundle.load("assets/$fname").then((bd) {
-    Uint8List u8lst = Uint8List.view(bd.buffer);
-    ui.instantiateImageCodec(u8lst).then((codec){
-      codec.getNextFrame().then((frameInfo) {
-        _img = frameInfo.image;
-        markNeedsPaint();
-        print ("_img created: $_img");
-      });
-    });
-  });
-
   @override
   void paint(PaintingContext context, Offset offset) {
     Canvas c = context.canvas;
     int dx = offset.dx.toInt();
     int dy = offset.dy.toInt();
 
+    Path path = Path();
+    Rect r = Rect.fromLTWH(dx+50.0, dy+50.0, 75.0, 75.0);
+    path.addOval(r);
+    r = Rect.fromLTWH(dx+75.0, dy+75.0, 100.0, 100.0);
+    path.addOval(r);
+
     Paint p = Paint();
+    p.color = Color.fromARGB(150, 255, 0, 0);
     p.style = PaintingStyle.fill;
-    p.color = Color.fromARGB(150, 0, 200, 255);
-    Rect r = Rect.fromLTWH(dx+50.0, dy+50.0, 150.0, 150.0);
-    c.drawRect(r, p);
-
-    p.style = PaintingStyle.stroke;
-    p.color = Color.fromARGB(150, 200, 0, 255);
-    p.strokeWidth = 10.0;
-    r = Rect.fromLTWH(dx+100.0, dy+100.0, 150.0, 150.0);
-    c.drawRect(r, p);
-
-    p.style = PaintingStyle.fill;
-    p.color = Color.fromARGB(150, 0, 200, 255);
-    Offset ctr = Offset(dx+150.0, dy+150.0);
-    c.drawCircle(ctr, 75.0, p);
-
-    p.style = PaintingStyle.stroke;
-    p.strokeWidth = 5.0;
-    p.color = Color.fromARGB(150, 255, 200, 0);
-    for (var i=0; i <= 10; i++) {
-      Rect r = Rect.fromLTRB(dx+50.0+20*i, dy+50.0, dx+50.0, dy+250.0-20*i);
-      c.drawLine(r.topLeft, r.bottomRight, p);
-    }
-
-    ui.ParagraphBuilder builder = ui.ParagraphBuilder(
-      ui.ParagraphStyle(textDirection: TextDirection.ltr),
-    )
-    ..pushStyle(ui.TextStyle(color: Colors.red, fontSize: 48.0))
-    ..addText('Hello!')
-    ..pushStyle(ui.TextStyle(color: Colors.blue[700], fontSize: 48.0))
-    ..addText('This is a sample')
-    ..pushStyle(ui.TextStyle(color: Colors.blue[200], fontSize: 30.0))
-    ..addText('you an draw');
-
-    ui.Paragraph paragraph = builder.build()
-      ..layout(ui.ParagraphConstraints(width: 300.0));
-
-    Offset off = Offset(dx+50.0, dy+50.0);
-    c.drawParagraph(paragraph, off);
-
-    if (_img != null) {
-      c.drawImage(_img, off, p);
-      print('draw _img');
-    } else {
-      print('_img is null.');
-    }
+    c.drawPath(path, p);
   }
 
 }
