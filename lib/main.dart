@@ -6,11 +6,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
 import 'dart:typed_data';
 import 'dart:async';
-
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 void main() {
   runApp(new MyApp());
 }
+
 class MyApp extends StatelessWidget {
 
   @override
@@ -23,63 +25,109 @@ class MyApp extends StatelessWidget {
         accentColor: const Color(0xFF2196f3),
         canvasColor: const Color(0xFFfafafa),
       ),
-      home: new MyHomePage(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => FirstScreen(),
+      },
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key}) : super(key: key);
+class FirstScreen extends StatefulWidget {
+  FirstScreen({Key key}) : super(key: key);
+
   @override
-  _MyHomePageState createState() => new _MyHomePageState();
+  _FirstScreenState createState() => new _FirstScreenState();
+
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _FirstScreenState extends State<FirstScreen> {
+
+  final _controller = TextEditingController();
+  final _fname = 'mydata.txt';
+
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
-      appBar: new AppBar(
-        title: new Text('App Name'),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Home'),
       ),
-      body: Center(
-        child: MyRenderBoxWidget(),
+      body: Column(
+        children: <Widget>[
+          Text('Home Screen',),
+          Padding(padding: EdgeInsets.all(20.0),),
+          TextField(controller: _controller,)
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0,
+        items: <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            title: Text('Save'),
+            icon: Icon(Icons.save),
+          ),
+          BottomNavigationBarItem(
+            title: Text('Load'),
+            icon: Icon(Icons.open_in_browser),
+          ),
+        ],
+        onTap: (int value){
+          switch (value) {
+            case 0:
+              saveIt(_controller.text);
+              setState(() {
+                _controller.text = '';
+              });
+              showDialog(
+                context: context,
+                builder: (BuildContext context) => AlertDialog(
+                  title: Text("saved!"),
+                  content: Text("save message to file."),
+                )
+              );
+              break;
+            case 1:
+              setState(() {
+                loadIt().then((String value){
+                  setState(() {
+                    _controller.text = value;
+                  });
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) => AlertDialog(
+                      title: Text("loaded!"),
+                      content: Text("load message from file."),
+                    )
+                  );
+                });
+
+              });
+              break;
+            default:
+              print('no default.');
+          }
+        },
       ),
     );
   }
-}
 
-class MyRenderBoxWidget extends SingleChildRenderObjectWidget {
-
-  @override
-  RenderObject createRenderObject(BuildContext context) {
-    return _MyRenderBox();
-  }
-}
-
-class _MyRenderBox extends RenderBox {
-  ui.Image _img;
-
-  @override
-  bool hitTest(HitTestResult result, { @required Offset position }) {
-    return true;
+  Future<File> getDataFile(String filename) async {
+    final directory = await getApplicationDocumentsDirectory();
+    return File(directory.path + '/' + filename);
   }
 
-  @override
-  void paint(PaintingContext context, Offset offset) {
-    Canvas c = context.canvas;
-    int dx = offset.dx.toInt();
-    int dy = offset.dy.toInt();
-
-    Path path = Path();
-    Rect r = Rect.fromLTWH(dx+50.0, dy+50.0, 75.0, 75.0);
-    path.addOval(r);
-    r = Rect.fromLTWH(dx+75.0, dy+75.0, 100.0, 100.0);
-    path.addOval(r);
-
-    Paint p = Paint();
-    p.color = Color.fromARGB(150, 255, 0, 0);
-    p.style = PaintingStyle.fill;
-    c.drawPath(path, p);
+  void saveIt(String value) async {
+    getDataFile(_fname).then((File file){
+      file.writeAsString(value);
+    });
   }
 
+  Future<String> loadIt() async {
+    try {
+      final file = await getDataFile(_fname);
+      return file.readAsString();
+    } catch (e) {
+      return null;
+    }
+  }
 }
